@@ -1,0 +1,12 @@
+                                                       QUERY PLAN                                                        
+-------------------------------------------------------------------------------------------------------------------------
+ Bitmap Heap Scan on try  (cost=12.03..899.03 rows=1 width=16) (actual time=0.136..2.676 rows=1 loops=1)
+   Recheck Cond: (wave = '(33,33)'::complex)
+   Rows Removed by Index Recheck: 20095
+   Heap Blocks: lossy=128
+   ->  Bitmap Index Scan on wave_idx  (cost=0.00..12.03 rows=20000 width=0) (actual time=0.116..0.116 rows=1280 loops=1)
+         Index Cond: (wave = '(33,33)'::complex)
+ Planning time: 0.445 ms
+ Execution time: 2.750 ms
+(8 rows)
+

@@ -1,0 +1,107 @@
+CREATE EXTENSION complex;
+SELECT '(1,2')::complex;
+ERROR:  syntax error at or near ")"
+LINE 1: SELECT '(1,2')::complex;
+                     ^
+SELECT '(1,2)'::complex +   '(1,2)';
+ ?column? 
+----------
+ (2,4)
+(1 row)
+
+SELECT '(1,2)'::complex -   '(1,2)';
+ ?column? 
+----------
+ (0,0)
+(1 row)
+
+SELECT '(1,2)'::complex =   '(1,2)';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT '(1,2)'::complex >   '(0,2)';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT '(1,2)'::complex >=  '(8,2)';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT mag( '(3,4)'::complex );
+ mag 
+-----
+   5
+(1 row)
+
+SELECT complex_mag_squared( '(3,4)'::complex );
+ complex_mag_squared 
+---------------------
+                  25
+(1 row)
+
+SELECT  2 > '(3,4)'::complex;
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT 25 >= '(3,4)'::complex;
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT  ('(1,8)'::complex@);      -- complex conjugate
+ ?column? 
+----------
+ (1,-8)
+(1 row)
+
+SELECT |'(3,4)'::complex ;        -- magnitude
+ ?column? 
+----------
+        5
+(1 row)
+
+SELECT complex_new(1,8);
+ complex_new 
+-------------
+ (1,8)
+(1 row)
+
+SELECT complex_new(3,1);
+ complex_new 
+-------------
+ (3,1)
+(1 row)
+
+SELECT complex_real('(-2,3)'::complex);
+ complex_real 
+--------------
+           -2
+(1 row)
+
+SELECT complex_img('(2,-3)'::complex);
+ complex_img 
+-------------
+          -3
+(1 row)
+
+SELECT complex_overlaps('(2,2)'::complex, '(1,1)');
+ complex_overlaps 
+------------------
+ t
+(1 row)
+
+SELECT complex_overlaps('(2,2)'::complex, '(3,2)');
+ complex_overlaps 
+------------------
+ f
+(1 row)
+
