@@ -26,3 +26,13 @@ SELECT complex_img('(2,-3)'::complex);
 SELECT complex_overlaps('(2,2)'::complex, '(1,1)');
 SELECT complex_overlaps('(2,2)'::complex, '(3,2)');
 
+SELECT complex_mult( '(2,7)'::complex, '(3,9)');
+SELECT complex_mult( '(3,2)'::complex, '(1,7)');
+SELECT complex_mult( '(1,1)'::complex, '(1,1)');
+
+SELECT complex_polar( '(4,3)');
+SELECT complex_xy('(5,36.8699)');
+SELECT complex_xy(complex_polar( '(4,3)'));
+SELECT complex_polar(complex_theta_add('(4,3)',20));
+
+
