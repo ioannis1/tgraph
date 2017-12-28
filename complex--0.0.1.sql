@@ -243,7 +243,7 @@ CREATE OR REPLACE FUNCTION complex_img(complex)
     AS '$libdir/complex'
     LANGUAGE C IMMUTABLE STRICT;
 
-CREATE OR REPLACE FUNCTION complex_new(float,float)
+CREATE OR REPLACE FUNCTION complex_new(float4,float4)
     RETURNS complex
     AS '$libdir/complex'
     LANGUAGE C IMMUTABLE STRICT;
@@ -253,7 +253,7 @@ CREATE OR REPLACE FUNCTION complex_theta(complex)
     AS '$libdir/complex'
     LANGUAGE C IMMUTABLE STRICT;
 
-CREATE OR REPLACE FUNCTION complex_theta_add(complex,float)
+CREATE OR REPLACE FUNCTION complex_theta_add(complex,float4)
     RETURNS complex
     AS '$libdir/complex'
     LANGUAGE C IMMUTABLE STRICT;

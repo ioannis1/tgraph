@@ -379,7 +379,7 @@ complex_real(PG_FUNCTION_ARGS)
 {
         Complex    *a = (Complex *) PG_GETARG_POINTER(0);
         
-        PG_RETURN_FLOAT8(a->x);
+        PG_RETURN_FLOAT4(a->x);
 }
 
 PG_FUNCTION_INFO_V1(complex_img);
@@ -389,7 +389,7 @@ complex_img(PG_FUNCTION_ARGS)
 {
         Complex    *a = (Complex *) PG_GETARG_POINTER(0);
         
-        PG_RETURN_FLOAT8(a->y);
+        PG_RETURN_FLOAT4(a->y);
 }
 
 
