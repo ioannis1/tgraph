@@ -3,33 +3,33 @@
 
 CREATE TYPE complex;
 
-CREATE FUNCTION complex_in(cstring)
+CREATE OR REPLACE FUNCTION complex_in(cstring)
     RETURNS complex
     AS '$libdir/complex'
     LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION complex_in_polar(cstring)
+CREATE OR REPLACE FUNCTION complex_in_polar(cstring)
     RETURNS complex
     AS '$libdir/complex'
     LANGUAGE C IMMUTABLE STRICT;
 
 
-CREATE FUNCTION complex_out(complex)
+CREATE OR REPLACE FUNCTION complex_out(complex)
     RETURNS cstring
     AS '$libdir/complex'
     LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION complex_out_polar(complex)
+CREATE OR REPLACE FUNCTION complex_out_polar(complex)
     RETURNS cstring
     AS '$libdir/complex'
     LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION complex_recv(internal)
+CREATE OR REPLACE FUNCTION complex_recv(internal)
    RETURNS complex
     AS '$libdir/complex'
    LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION complex_send(complex)
+CREATE OR REPLACE FUNCTION complex_send(complex)
    RETURNS bytea
     AS '$libdir/complex'
    LANGUAGE C IMMUTABLE STRICT;
@@ -44,23 +44,23 @@ CREATE TYPE complex (
    alignment      = double
 );
 
-CREATE FUNCTION complex_abs_cmp(complex,complex)
+CREATE OR REPLACE FUNCTION complex_abs_cmp(complex,complex)
    RETURNS int
     AS '$libdir/complex'
    LANGUAGE C IMMUTABLE STRICT;
 
 
-CREATE FUNCTION complex_add(complex, complex)
+CREATE OR REPLACE FUNCTION complex_add(complex, complex)
     RETURNS complex
     AS '$libdir/complex'
     LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION complex_subtract(complex, complex)
+CREATE OR REPLACE FUNCTION complex_subtract(complex, complex)
     RETURNS complex
     AS '$libdir/complex'
     LANGUAGE C IMMUTABLE STRICT;
 
-CREATE OR REPLACE FUNCTION mag(complex)
+CREATE OR REPLACE OR REPLACE FUNCTION mag(complex)
     RETURNS real
     AS '$libdir/complex', 'complex_mag'
     LANGUAGE C IMMUTABLE STRICT;
