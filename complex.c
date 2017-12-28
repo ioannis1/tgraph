@@ -15,6 +15,38 @@ typedef struct Complex {
 #define Mag(c)      ((c)->x*(c)->x + (c)->y*(c)->y)
 
 PG_FUNCTION_INFO_V1(complex_in_polar);
+PG_FUNCTION_INFO_V1(complex_in);
+PG_FUNCTION_INFO_V1(complex_out_polar);
+PG_FUNCTION_INFO_V1(complex_out);
+PG_FUNCTION_INFO_V1(complex_recv);
+PG_FUNCTION_INFO_V1(complex_send);
+PG_FUNCTION_INFO_V1(complex_conjugate);
+PG_FUNCTION_INFO_V1(complex_add);
+PG_FUNCTION_INFO_V1(complex_mult);
+PG_FUNCTION_INFO_V1(complex_subtract);
+PG_FUNCTION_INFO_V1(complex_theta);
+PG_FUNCTION_INFO_V1(complex_xy);
+PG_FUNCTION_INFO_V1(complex_polar);
+PG_FUNCTION_INFO_V1(complex_theta_add);
+PG_FUNCTION_INFO_V1(complex_mag);
+PG_FUNCTION_INFO_V1(complex_mag_squared);
+PG_FUNCTION_INFO_V1(complex_abs_cmp);
+PG_FUNCTION_INFO_V1(complex_equal);
+PG_FUNCTION_INFO_V1(complex_less);
+PG_FUNCTION_INFO_V1(complex_less_equal);
+PG_FUNCTION_INFO_V1(complex_greater_equal);
+PG_FUNCTION_INFO_V1(complex_greater);
+PG_FUNCTION_INFO_V1(complex_overlaps);
+PG_FUNCTION_INFO_V1(complex_real);
+PG_FUNCTION_INFO_V1(complex_img);
+PG_FUNCTION_INFO_V1(complex_new_polar);
+PG_FUNCTION_INFO_V1(complex_new);
+PG_FUNCTION_INFO_V1(complex_int2c_cmp);
+PG_FUNCTION_INFO_V1(complex_int2c_equal);
+PG_FUNCTION_INFO_V1(complex_int2c_less);
+PG_FUNCTION_INFO_V1(complex_int2c_less_equal);
+PG_FUNCTION_INFO_V1(complex_int2c_greater_equal);
+PG_FUNCTION_INFO_V1(complex_int2c_greater);
 
 Datum
 complex_in_polar(PG_FUNCTION_ARGS)
@@ -42,7 +74,6 @@ complex_in_polar(PG_FUNCTION_ARGS)
     PG_RETURN_POINTER(result);
 }
 
-PG_FUNCTION_INFO_V1(complex_in);
 
 Datum
 complex_in(PG_FUNCTION_ARGS)
@@ -64,7 +95,6 @@ complex_in(PG_FUNCTION_ARGS)
     PG_RETURN_POINTER(result);
 }
 
-PG_FUNCTION_INFO_V1(complex_out_polar);
 
 Datum
 complex_out_polar(PG_FUNCTION_ARGS)
@@ -79,7 +109,6 @@ complex_out_polar(PG_FUNCTION_ARGS)
     result = psprintf("%g<%g>", mag, angle);
     PG_RETURN_CSTRING(result);
 }
-PG_FUNCTION_INFO_V1(complex_out);
 
 Datum
 complex_out(PG_FUNCTION_ARGS)
@@ -90,7 +119,6 @@ complex_out(PG_FUNCTION_ARGS)
     PG_RETURN_CSTRING(result);
 }
 
-PG_FUNCTION_INFO_V1(complex_recv);
 Datum
 complex_recv(PG_FUNCTION_ARGS)
 {
@@ -103,7 +131,6 @@ complex_recv(PG_FUNCTION_ARGS)
     PG_RETURN_POINTER(result);
 }
 
-PG_FUNCTION_INFO_V1(complex_send);
 
 Datum
 complex_send(PG_FUNCTION_ARGS)
@@ -116,7 +143,6 @@ complex_send(PG_FUNCTION_ARGS)
     PG_RETURN_BYTEA_P(pq_endtypsend(&buf));
 }
 
-PG_FUNCTION_INFO_V1(complex_conjugate);
 Datum
 complex_conjugate(PG_FUNCTION_ARGS)
 {
@@ -129,7 +155,6 @@ complex_conjugate(PG_FUNCTION_ARGS)
         PG_RETURN_POINTER(result);
 }
 
-PG_FUNCTION_INFO_V1(complex_add);
 
 Datum
 complex_add(PG_FUNCTION_ARGS)
@@ -144,7 +169,6 @@ complex_add(PG_FUNCTION_ARGS)
         PG_RETURN_POINTER(result);
 }
 
-PG_FUNCTION_INFO_V1(complex_mult);
 
 Datum
 complex_mult(PG_FUNCTION_ARGS)
@@ -161,7 +185,6 @@ complex_mult(PG_FUNCTION_ARGS)
 
 
 
-PG_FUNCTION_INFO_V1(complex_subtract);
 
 Datum
 complex_subtract(PG_FUNCTION_ARGS)
@@ -178,7 +201,6 @@ complex_subtract(PG_FUNCTION_ARGS)
 
 
 
-PG_FUNCTION_INFO_V1(complex_theta);
 
 Datum
 complex_theta(PG_FUNCTION_ARGS)
@@ -191,7 +213,6 @@ complex_theta(PG_FUNCTION_ARGS)
     PG_RETURN_FLOAT4(result );
 }
 
-PG_FUNCTION_INFO_V1(complex_xy);
 Datum
 complex_xy(PG_FUNCTION_ARGS)
 {
@@ -215,7 +236,6 @@ complex_xy(PG_FUNCTION_ARGS)
      PG_RETURN_POINTER(result);
 }
 
-PG_FUNCTION_INFO_V1(complex_polar);
 
 Datum
 complex_polar(PG_FUNCTION_ARGS)
@@ -236,7 +256,6 @@ complex_polar(PG_FUNCTION_ARGS)
      PG_RETURN_POINTER(result);
 }
 
-PG_FUNCTION_INFO_V1(complex_theta_add);
 
 Datum
 complex_theta_add(PG_FUNCTION_ARGS)
@@ -257,7 +276,6 @@ complex_theta_add(PG_FUNCTION_ARGS)
      PG_RETURN_POINTER(result);
 }
 
-PG_FUNCTION_INFO_V1(complex_mag);
 
 Datum
 complex_mag(PG_FUNCTION_ARGS)
@@ -269,7 +287,6 @@ complex_mag(PG_FUNCTION_ARGS)
     PG_RETURN_FLOAT4(result );
 }
 
-PG_FUNCTION_INFO_V1(complex_mag_squared);
 
 Datum
 complex_mag_squared(PG_FUNCTION_ARGS)
@@ -290,7 +307,6 @@ complex_cmp_internal( Complex *a, Complex *b )
      return 1 ;
 }
 
-PG_FUNCTION_INFO_V1(complex_abs_cmp);
 Datum
 complex_abs_cmp(PG_FUNCTION_ARGS)
 {
@@ -301,7 +317,6 @@ complex_abs_cmp(PG_FUNCTION_ARGS)
 }
 
 
-PG_FUNCTION_INFO_V1(complex_equal);
 
 Datum
 complex_equal(PG_FUNCTION_ARGS)
@@ -313,7 +328,6 @@ complex_equal(PG_FUNCTION_ARGS)
         PG_RETURN_BOOL(false);
 }
 
-PG_FUNCTION_INFO_V1(complex_less);
 
 Datum
 complex_less(PG_FUNCTION_ARGS)
@@ -325,7 +339,6 @@ complex_less(PG_FUNCTION_ARGS)
         PG_RETURN_BOOL(false);
 }
 
-PG_FUNCTION_INFO_V1(complex_less_equal);
 Datum
 complex_less_equal(PG_FUNCTION_ARGS)
 {
@@ -336,7 +349,6 @@ complex_less_equal(PG_FUNCTION_ARGS)
         PG_RETURN_BOOL(false);
 }
 
-PG_FUNCTION_INFO_V1(complex_greater_equal);
 
 Datum
 complex_greater_equal(PG_FUNCTION_ARGS)
@@ -348,7 +360,6 @@ complex_greater_equal(PG_FUNCTION_ARGS)
         PG_RETURN_BOOL(false);
 }
 
-PG_FUNCTION_INFO_V1(complex_greater);
 
 Datum
 complex_greater(PG_FUNCTION_ARGS)
@@ -360,7 +371,6 @@ complex_greater(PG_FUNCTION_ARGS)
         PG_RETURN_BOOL(false);
 }
 
-PG_FUNCTION_INFO_V1(complex_overlaps);
 
 Datum
 complex_overlaps(PG_FUNCTION_ARGS)
@@ -373,7 +383,6 @@ complex_overlaps(PG_FUNCTION_ARGS)
         PG_RETURN_BOOL(true);
 }
 
-PG_FUNCTION_INFO_V1(complex_real);
 Datum
 complex_real(PG_FUNCTION_ARGS)
 {
@@ -382,7 +391,6 @@ complex_real(PG_FUNCTION_ARGS)
         PG_RETURN_FLOAT4(a->x);
 }
 
-PG_FUNCTION_INFO_V1(complex_img);
 
 Datum
 complex_img(PG_FUNCTION_ARGS)
@@ -393,7 +401,6 @@ complex_img(PG_FUNCTION_ARGS)
 }
 
 
-PG_FUNCTION_INFO_V1(complex_new_polar);
 
 Datum
 complex_new_polar(PG_FUNCTION_ARGS)
@@ -416,7 +423,6 @@ complex_new_polar(PG_FUNCTION_ARGS)
     PG_RETURN_POINTER( result );
 }
 
-PG_FUNCTION_INFO_V1(complex_new);
 
 Datum
 complex_new(PG_FUNCTION_ARGS)
@@ -444,7 +450,6 @@ complex_int2c_cmp_internal( int32 a, Complex *b )
      return 1 ;
 }
 
-PG_FUNCTION_INFO_V1(complex_int2c_cmp);
 Datum
 complex_int2c_cmp(PG_FUNCTION_ARGS)
 {
@@ -455,7 +460,6 @@ complex_int2c_cmp(PG_FUNCTION_ARGS)
 }
 
 
-PG_FUNCTION_INFO_V1(complex_int2c_equal);
 
 Datum
 complex_int2c_equal(PG_FUNCTION_ARGS)
@@ -467,7 +471,6 @@ complex_int2c_equal(PG_FUNCTION_ARGS)
         PG_RETURN_BOOL(false);
 }
 
-PG_FUNCTION_INFO_V1(complex_int2c_less);
 
 Datum
 complex_int2c_less(PG_FUNCTION_ARGS)
@@ -479,7 +482,6 @@ complex_int2c_less(PG_FUNCTION_ARGS)
         PG_RETURN_BOOL(false);
 }
 
-PG_FUNCTION_INFO_V1(complex_int2c_less_equal);
 Datum
 complex_int2c_less_equal(PG_FUNCTION_ARGS)
 {
@@ -490,7 +492,6 @@ complex_int2c_less_equal(PG_FUNCTION_ARGS)
         PG_RETURN_BOOL(false);
 }
 
-PG_FUNCTION_INFO_V1(complex_int2c_greater_equal);
 
 Datum
 complex_int2c_greater_equal(PG_FUNCTION_ARGS)
@@ -502,7 +503,6 @@ complex_int2c_greater_equal(PG_FUNCTION_ARGS)
         PG_RETURN_BOOL(false);
 }
 
-PG_FUNCTION_INFO_V1(complex_int2c_greater);
 
 Datum
 complex_int2c_greater(PG_FUNCTION_ARGS)
