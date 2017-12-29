@@ -8,21 +8,12 @@ CREATE OR REPLACE FUNCTION complex_in(cstring)
     AS '$libdir/complex'
     LANGUAGE C IMMUTABLE STRICT;
 
-CREATE OR REPLACE FUNCTION complex_in_polar(cstring)
-    RETURNS complex
-    AS '$libdir/complex'
-    LANGUAGE C IMMUTABLE STRICT;
-
 
 CREATE OR REPLACE FUNCTION complex_out(complex)
     RETURNS cstring
     AS '$libdir/complex'
     LANGUAGE C IMMUTABLE STRICT;
 
-CREATE OR REPLACE FUNCTION complex_out_polar(complex)
-    RETURNS cstring
-    AS '$libdir/complex'
-    LANGUAGE C IMMUTABLE STRICT;
 
 CREATE OR REPLACE FUNCTION complex_recv(internal)
    RETURNS complex
@@ -60,7 +51,7 @@ CREATE OR REPLACE FUNCTION complex_subtract(complex, complex)
     AS '$libdir/complex'
     LANGUAGE C IMMUTABLE STRICT;
 
-CREATE OR REPLACE OR REPLACE FUNCTION mag(complex)
+CREATE OR REPLACE FUNCTION mag(complex)
     RETURNS real
     AS '$libdir/complex', 'complex_mag'
     LANGUAGE C IMMUTABLE STRICT;
