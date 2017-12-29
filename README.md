@@ -1,10 +1,17 @@
+You may set the GUC variable complex.style='polar' to set output to polar coordinates, or to 'j' to display in cartisian
+coordinates without parenthesis, such as  1,2j .
+
 # constructors
 
 SELECT '(1,2)'::complex                        => (1,2)
 
+SELECT '1,2j'::complex                         => (1,2)
+
+SELECT '2.236<63.435>'::complex                => (1,2)
+
 SELECT complex_new(1, 2)                       => (1,2)
 
-SELECT complex_new_polar( 8,30 )               => (6.92821,4)
+SELECT complex_new_polar( 2.236,63.435 )       => (1,2)
 
 # Misc
 

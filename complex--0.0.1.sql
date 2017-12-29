@@ -27,12 +27,12 @@ CREATE OR REPLACE FUNCTION complex_send(complex)
 
 
 CREATE TYPE complex (
-   internallength = 16,
+   internallength = 8,
    input          = complex_in,
    output         = complex_out,
    receive        = complex_recv,
    send           = complex_send,
-   alignment      = double
+   alignment      = float
 );
 
 CREATE OR REPLACE FUNCTION complex_abs_cmp(complex,complex)
@@ -96,6 +96,16 @@ CREATE OR REPLACE FUNCTION complex_mult(complex,complex)
     AS '$libdir/complex'
     LANGUAGE C IMMUTABLE STRICT;
 
+CREATE OR REPLACE FUNCTION complex_polar(complex)
+    RETURNS complex
+    AS '$libdir/complex'
+    LANGUAGE C IMMUTABLE STRICT;
+
+CREATE OR REPLACE FUNCTION complex_xy(complex)
+    RETURNS complex
+    AS '$libdir/complex'
+    LANGUAGE C IMMUTABLE STRICT;
+
 CREATE OPERATOR | (
     rightarg = complex,
     procedure = mag
@@ -103,6 +113,10 @@ CREATE OPERATOR | (
 CREATE OPERATOR |^ (
     rightarg = complex,
     procedure = complex_mag_squared
+);
+CREATE OPERATOR ^ (
+    rightarg = complex,
+    procedure = complex_polar
 );
 CREATE OPERATOR @ (
     leftarg = complex,
@@ -249,15 +263,6 @@ CREATE OR REPLACE FUNCTION complex_theta_add(complex,float4)
     AS '$libdir/complex'
     LANGUAGE C IMMUTABLE STRICT;
 
-CREATE OR REPLACE FUNCTION complex_polar(complex)
-    RETURNS complex
-    AS '$libdir/complex'
-    LANGUAGE C IMMUTABLE STRICT;
-
-CREATE OR REPLACE FUNCTION complex_xy(complex)
-    RETURNS complex
-    AS '$libdir/complex'
-    LANGUAGE C IMMUTABLE STRICT;
 
 CREATE OR REPLACE FUNCTION complex_new_polar(float4,float4)
     RETURNS complex
