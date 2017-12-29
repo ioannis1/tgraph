@@ -12,8 +12,8 @@
 PG_MODULE_MAGIC;
 
 typedef struct Complex {
-    double      x;
-    double      y;
+    float4      x;
+    float4      y;
 } Complex;
 
 

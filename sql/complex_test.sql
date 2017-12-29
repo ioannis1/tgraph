@@ -1,6 +1,8 @@
 CREATE EXTENSION complex;
 
-SELECT '(1,2')::complex;
+SET complex.style = 'none';
+
+SELECT '(1,2)'::complex;
 
 SELECT '(1,2)'::complex +   '(1,2)';
 SELECT '(1,2)'::complex -   '(1,2)';

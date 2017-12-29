@@ -1,18 +1,21 @@
 CREATE EXTENSION complex;
-SELECT '(1,2')::complex;
-ERROR:  syntax error at or near ")"
-LINE 1: SELECT '(1,2')::complex;
-                     ^
+SET complex.style = 'none';
+SELECT '(1,2)'::complex;
+    complex    
+---------------
+ (1.000,2.000)
+(1 row)
+
 SELECT '(1,2)'::complex +   '(1,2)';
- ?column? 
-----------
- (2,4)
+   ?column?    
+---------------
+ (2.000,4.000)
 (1 row)
 
 SELECT '(1,2)'::complex -   '(1,2)';
- ?column? 
-----------
- (0,0)
+   ?column?    
+---------------
+ (0.000,0.000)
 (1 row)
 
 SELECT '(1,2)'::complex =   '(1,2)';
@@ -58,9 +61,9 @@ SELECT 25 >= '(3,4)'::complex;
 (1 row)
 
 SELECT  ('(1,8)'::complex@);      -- complex conjugate
- ?column? 
-----------
- (1,-8)
+    ?column?    
+----------------
+ (1.000,-8.000)
 (1 row)
 
 SELECT |'(3,4)'::complex ;        -- magnitude
@@ -70,27 +73,27 @@ SELECT |'(3,4)'::complex ;        -- magnitude
 (1 row)
 
 SELECT complex_new(1,8);
- complex_new 
--------------
- (0,0)
+  complex_new  
+---------------
+ (1.000,8.000)
 (1 row)
 
 SELECT complex_new(3,1);
- complex_new 
--------------
- (0,0)
+  complex_new  
+---------------
+ (3.000,1.000)
 (1 row)
 
 SELECT complex_real('(-2,3)'::complex);
  complex_real 
 --------------
-            0
+           -2
 (1 row)
 
 SELECT complex_img('(2,-3)'::complex);
  complex_img 
 -------------
-           0
+          -3
 (1 row)
 
 SELECT complex_overlaps('(2,2)'::complex, '(1,1)');
@@ -106,44 +109,44 @@ SELECT complex_overlaps('(2,2)'::complex, '(3,2)');
 (1 row)
 
 SELECT complex_mult( '(2,7)'::complex, '(3,9)');
- complex_mult 
---------------
- (-57,39)
+   complex_mult   
+------------------
+ (-57.000,39.000)
 (1 row)
 
 SELECT complex_mult( '(3,2)'::complex, '(1,7)');
- complex_mult 
---------------
- (-11,23)
+   complex_mult   
+------------------
+ (-11.000,23.000)
 (1 row)
 
 SELECT complex_mult( '(1,1)'::complex, '(1,1)');
- complex_mult 
---------------
- (0,2)
+ complex_mult  
+---------------
+ (0.000,2.000)
 (1 row)
 
 SELECT complex_polar( '(4,3)');
- complex_polar 
----------------
- (5,36.8699)
+ complex_polar  
+----------------
+ (5.000,36.870)
 (1 row)
 
 SELECT complex_xy('(5,36.8699)');
- complex_xy 
-------------
- (4,3)
+  complex_xy   
+---------------
+ (4.000,3.000)
 (1 row)
 
 SELECT complex_xy(complex_polar( '(4,3)'));
- complex_xy 
-------------
- (4,3)
+  complex_xy   
+---------------
+ (4.000,3.000)
 (1 row)
 
 SELECT complex_polar(complex_theta_add('(4,3)',20));
-   complex_polar   
--------------------
- (7.31874,56.8699)
+ complex_polar  
+----------------
+ (5.000,56.870)
 (1 row)
 
