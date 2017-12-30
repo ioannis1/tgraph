@@ -25,7 +25,7 @@ SELECT complex_real( '(3,5)' )                   => 3
 
 SELECT complex_img(  '(3,5)' )                   => 5 
 
-SELECT complex_dot('-6,8j','5,12j');             => 66
+SELECT complex_dot('3,4j','3,-4j');             => 25
 
 SELECT complex_angle_add('4,4j',20);            => 5.657<65>
 

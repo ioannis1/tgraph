@@ -192,7 +192,7 @@ complex_dot(PG_FUNCTION_ARGS)
         Complex    *b = (Complex *) PG_GETARG_POINTER(1);
 
 
-        PG_RETURN_FLOAT4( (a->x*b->x) + (a->y*b->y) );
+        PG_RETURN_FLOAT4( fabs((a->x*b->x)) + fabs((a->y*b->y)) );
 }
 
 Datum
