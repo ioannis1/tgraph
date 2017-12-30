@@ -2,7 +2,11 @@ CREATE EXTENSION complex;
 
 SET complex.style = 'none';
 
-SELECT '(1,2)'::complex;
+SELECT '(1,2)'::complex  ;
+SELECT '1,2j''::complex  ;
+SELECT '1''::complex     ;
+SELECT '2j''::complex    ;
+SELECT '1-2j''::complex  ;
 
 SELECT '(1,2)'::complex +   '(1,2)';
 SELECT '(1,2)'::complex -   '(1,2)';

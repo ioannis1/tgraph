@@ -66,7 +66,7 @@ complex_out(PG_FUNCTION_ARGS)
      if ( (NULL != output_style) && !(strcmp( output_style, "polar")) ) {
             mag    =  sqrt( MAG_SQUARED(a) );
             angle  =  (180/3.14159)* atan(a->y/a->x);
-            result = psprintf("%.3f<%.3f>", mag, angle);
+            result = psprintf("%.3f<%.3f>", mag, (a->x<0) ? angle+180 : angle);
      } else if ( (NULL != output_style) && !(strcmp( output_style, "j")) ) {
             result = psprintf("%.3f,%.3fj", a->x, a->y);
      }else{
@@ -139,6 +139,15 @@ complex_mult(PG_FUNCTION_ARGS)
         PG_RETURN_POINTER(result);
 }
 
+Datum
+complex_dot(PG_FUNCTION_ARGS)
+{
+        Complex    *a = (Complex *) PG_GETARG_POINTER(0);
+        Complex    *b = (Complex *) PG_GETARG_POINTER(1);
+
+
+        PG_RETURN_FLOAT4( (a->x*b->x) + (a->y*b->y) );
+}
 
 
 
@@ -165,6 +174,7 @@ complex_theta(PG_FUNCTION_ARGS)
     float4    result;
 
     result =  (180/3.14159)* atan(a->y/a->x);
+    if (a->x<0) result += 180;
 
     PG_RETURN_FLOAT4(result );
 }
@@ -202,13 +212,20 @@ complex_polar(PG_FUNCTION_ARGS)
      Complex    *a = (Complex *) PG_GETARG_POINTER(0);
      Complex    *result;
      float4     angle;
+     const char  *output_style = GetConfigOption("complex.style",true,false);
 
-     result = (Complex *) palloc(sizeof(Complex));
+     result    = (Complex *) palloc(sizeof(Complex));
 
-     float4    mag  = sqrt( MAG_SQUARED(a) );
-     angle  =  (180/3.14159)* atan(a->y/a->x);
-     result->x = mag;
-     result->y =  angle;
+     // Do nothing if we already display in polar coordinates
+     if ( (NULL != output_style) && !(strcmp( output_style, "polar")) ) {
+            result->x  = a->x;
+            result->y  = a->y;
+     }else{
+            result->x =  sqrt( MAG_SQUARED(a) );
+            angle     =  (180/3.14159)* atan(a->y/a->x);
+            result->y =  (a->x<0) ? angle + 180 : angle ;
+     }
+
      PG_RETURN_POINTER(result);
 }
 
@@ -227,6 +244,7 @@ complex_theta_add(PG_FUNCTION_ARGS)
 
      mag  = sqrt( MAG_SQUARED(a) );
      old_angle  =  (180/3.14159)* atan(a->y/a->x);
+     if (a->x<0)   old_angle +=  180;
 
      result->x  =  mag * cos( (old_angle+phi) * 3.14159/180);
      result->y  =  mag * sin( (old_angle+phi) * 3.14159/180);

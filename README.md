@@ -25,6 +25,9 @@ SELECT complex_real( '(3,5)' )                   => 3
 
 SELECT complex_img(  '(3,5)' )                   => 5 
 
+SELECT complex_dot('-6,8j','5,12j');             => 66
+
+
 # Magnitude, magnitude squared
 
 SELECT |  '(3,4)'::complex                      => 5

@@ -27,6 +27,7 @@ PG_FUNCTION_INFO_V1(complex_send);
 PG_FUNCTION_INFO_V1(complex_conjugate);
 PG_FUNCTION_INFO_V1(complex_add);
 PG_FUNCTION_INFO_V1(complex_mult);
+PG_FUNCTION_INFO_V1(complex_dot);
 PG_FUNCTION_INFO_V1(complex_subtract);
 PG_FUNCTION_INFO_V1(complex_theta);
 PG_FUNCTION_INFO_V1(complex_xy);

@@ -51,6 +51,11 @@ CREATE OR REPLACE FUNCTION complex_subtract(complex, complex)
     AS '$libdir/complex'
     LANGUAGE C IMMUTABLE STRICT;
 
+CREATE OR REPLACE FUNCTION complex_dot(complex, complex)
+    RETURNS float4
+    AS '$libdir/complex'
+    LANGUAGE C IMMUTABLE STRICT;
+
 CREATE OR REPLACE FUNCTION mag(complex)
     RETURNS real
     AS '$libdir/complex', 'complex_mag'
