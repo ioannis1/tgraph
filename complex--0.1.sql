@@ -1,4 +1,4 @@
--- complain if script is sourced in psql, rather than via CREATE EXTENSION
+-- COPYRIGHT (c) Ioannis Tambouras 2011-2015
 \echo Use "CREATE EXTENSION complex" to load this file. \quit
 
 CREATE TYPE complex;

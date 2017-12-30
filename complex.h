@@ -1,3 +1,5 @@
+// COPYRIGHT (c) Ioannis Tambouras 2011-2015
+
 #include "postgres.h"
 #include "fmgr.h"
 #include "utils/builtins.h"
@@ -30,6 +32,7 @@ PG_FUNCTION_INFO_V1(complex_mult);
 PG_FUNCTION_INFO_V1(complex_dot);
 PG_FUNCTION_INFO_V1(complex_subtract);
 PG_FUNCTION_INFO_V1(complex_angle);
+PG_FUNCTION_INFO_V1(complex_theta);
 PG_FUNCTION_INFO_V1(complex_xy);
 PG_FUNCTION_INFO_V1(complex_polar);
 PG_FUNCTION_INFO_V1(complex_angle_add);

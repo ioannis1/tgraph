@@ -2,11 +2,11 @@ CREATE EXTENSION complex;
 
 SET complex.style = 'none';
 
+-- Input syntax
 SELECT '(1,2)'::complex  ;
-SELECT '1,2j''::complex  ;
-SELECT '1''::complex     ;
-SELECT '2j''::complex    ;
-SELECT '1-2j''::complex  ;
+SELECT '1-2j'::complex   ;
+SELECT '1'::complex      ;
+SELECT '-2j''::complex   ;
 
 SELECT '(1,2)'::complex +   '(1,2)';
 SELECT '(1,2)'::complex -   '(1,2)';
@@ -14,8 +14,12 @@ SELECT '(1,2)'::complex =   '(1,2)';
 SELECT '(1,2)'::complex >   '(0,2)';
 SELECT '(1,2)'::complex >=  '(8,2)';
 
+
+-- Functions
 SELECT mag( '(3,4)'::complex );
 SELECT complex_mag_squared( '(3,4)'::complex );
+
+SELECT complex_dot('-6+8j','5,12j');
 
 SELECT  2 > '(3,4)'::complex;
 SELECT 25 >= '(3,4)'::complex;
@@ -39,6 +43,7 @@ SELECT complex_mult( '(1,1)'::complex, '(1,1)');
 SELECT complex_polar( '(4,3)');
 SELECT complex_xy('(5,36.8699)');
 SELECT complex_xy(complex_polar( '(4,3)'));
-SELECT complex_polar(complex_theta_add('(4,3)',20));
+SELECT complex_angle('4,3j');
+SELECT complex_polar(complex_angle_add('(4,3)',20));
 
 

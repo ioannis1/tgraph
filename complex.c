@@ -1,3 +1,5 @@
+// COPYRIGHT (c) Ioannis Tambouras 2011-2015
+
 #include "postgres.h"
 #include "fmgr.h"
 #include "utils/builtins.h"

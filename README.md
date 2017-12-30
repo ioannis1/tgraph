@@ -1,3 +1,5 @@
+-- COPYRIGHT (c) Ioannis Tambouras 2011-2013
+
 You may set the GUC variable complex.style='polar' to set output to polar coordinates, or to 'j' to display in cartisian
 coordinates without parenthesis, such as  1,2j .
 
