@@ -14,7 +14,11 @@ complex_in(PG_FUNCTION_ARGS)
     char       *str = PG_GETARG_CSTRING(0);
     float4     x, y;
     Complex    *result;
+    char       buf[54], c;
 
+     buf[0]='\0';
+     strncat( buf, str, 50);
+     strcat( buf, "__");
 
      result = (Complex *) palloc(sizeof(Complex));
      if (sscanf(str, "%f< %f >", &x, &y) == 2) { 
@@ -25,7 +29,6 @@ complex_in(PG_FUNCTION_ARGS)
                if (y< SENSITIVITY) y = 0;
                result->x = x;
                result->y = y;
-
      } else if (sscanf(str, "(%f,%f)", &x, &y) == 2) {
                result->x = x;
                result->y = y;
@@ -35,9 +38,18 @@ complex_in(PG_FUNCTION_ARGS)
      } else if (sscanf(str, "%f,%fj", &x, &y) == 2) {
                result->x = x;
                result->y = y;
+     } else if ( (sscanf(buf, "%g%[j]%[_]",  &y, &c, &c) == 3) ) {
+               result->x = 0;
+               result->y = y;
+     } else if ( (sscanf(buf,"%g%[_]%[_]",  &x,&c,&c) == 2) ) {
+               result->x = x;
+               result->y = 0;
+     } else if ( (sscanf(buf,"%g%g%[j]%[_]",  &x,&y,&c,&c) == 4) ) {
+               result->x = x;
+               result->y = y;
      }else{ 
              ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
-                            errmsg("invalid: syntax is \"x<y>\", \"x,y\", or \"(x,y)\"")));
+                            errmsg("syntax is like \"8<60>\", \"2,5\",\"(2,5)\",\"2-5j\", \"+5j\", or \"2\"")));
      }
      PG_RETURN_POINTER(result);
 }

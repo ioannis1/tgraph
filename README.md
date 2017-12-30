@@ -3,6 +3,12 @@ coordinates without parenthesis, such as  1,2j .
 
 # constructors
 
+SELECT '1+2j'::complex                         => (1,2)
+
+SELECT '2j'::complex                           => (0,2)
+
+SELECT '1'::complex                            => (1,0)
+
 SELECT '(1,2)'::complex                        => (1,2)
 
 SELECT '1,2j'::complex                         => (1,2)
