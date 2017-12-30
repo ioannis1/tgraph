@@ -168,7 +168,7 @@ complex_subtract(PG_FUNCTION_ARGS)
 
 
 Datum
-complex_theta(PG_FUNCTION_ARGS)
+complex_angle(PG_FUNCTION_ARGS)
 {
     Complex    *a = (Complex *) PG_GETARG_POINTER(0);
     float4    result;
@@ -231,7 +231,7 @@ complex_polar(PG_FUNCTION_ARGS)
 
 
 Datum
-complex_theta_add(PG_FUNCTION_ARGS)
+complex_angle_add(PG_FUNCTION_ARGS)
 {
      Complex    *a = (Complex *) PG_GETARG_POINTER(0);
      float4      phi  = PG_GETARG_FLOAT4(1);

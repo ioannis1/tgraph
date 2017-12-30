@@ -27,6 +27,8 @@ SELECT complex_img(  '(3,5)' )                   => 5
 
 SELECT complex_dot('-6,8j','5,12j');             => 66
 
+SELECT complex_angle_add('4,4j',20);            => 5.657<65>
+
 
 # Magnitude, magnitude squared
 
@@ -56,7 +58,7 @@ SELECT '(2,4)' *  (2,2)'::complex            => (-4,12)
 
 SELECT complex_polar( '(7,-5)' )             => (8.60233,-35.5377)  -- meaning r=8.6 angle=-35
 
-SELECT complex_theta( '(7,-5)' )             => -35.5377
+SELECT complex_angle( '(7,-5)' )             => -35.5377
 
 # Conversion from polar to cartesian 
 

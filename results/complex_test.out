@@ -56,7 +56,8 @@ SELECT complex_mult( '(1,1)'::complex, '(1,1)');
 SELECT complex_polar( '(4,3)');
 SELECT complex_xy('(5,36.8699)');
 SELECT complex_xy(complex_polar( '(4,3)'));
-SELECT complex_polar(complex_theta_add('(4,3)',20));
+SELECT complex_angle('4,3j');
+SELECT complex_polar(complex_angle_add('(4,3)',20));
 
 
 ERROR:  syntax error at or near "("
