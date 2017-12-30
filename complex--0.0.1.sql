@@ -191,7 +191,7 @@ CREATE OPERATOR > (
     join       = scalargtjoinsel
 );
 
-CREATE AGGREGATE complex_sum (
+CREATE AGGREGATE sum (
    sfunc = complex_add,
    basetype = complex,
    stype = complex,
@@ -258,12 +258,17 @@ CREATE OR REPLACE FUNCTION complex_new(float4,float4)
     AS '$libdir/complex'
     LANGUAGE C IMMUTABLE STRICT;
 
-CREATE OR REPLACE FUNCTION complex_theta(complex)
+CREATE OR REPLACE FUNCTION complex_angle(complex)
     RETURNS float4
     AS '$libdir/complex'
     LANGUAGE C IMMUTABLE STRICT;
 
-CREATE OR REPLACE FUNCTION complex_theta_add(complex,float4)
+CREATE OR REPLACE FUNCTION complex_theta(complex,complex)
+    RETURNS float4
+    AS '$libdir/complex'
+    LANGUAGE C IMMUTABLE STRICT;
+
+CREATE OR REPLACE FUNCTION complex_angle_add(complex,float4)
     RETURNS complex
     AS '$libdir/complex'
     LANGUAGE C IMMUTABLE STRICT;
