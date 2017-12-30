@@ -12,7 +12,7 @@ Datum
 complex_in(PG_FUNCTION_ARGS)
 {
     char       *str = PG_GETARG_CSTRING(0);
-    float4     x, y;
+    float4     x, y, new_x, new_y;
     Complex    *result;
     char       buf[54], c;
 
@@ -23,12 +23,12 @@ complex_in(PG_FUNCTION_ARGS)
      result = (Complex *) palloc(sizeof(Complex));
      if (sscanf(str, "%f< %f >", &x, &y) == 2) { 
 
-               y      =  x * ( sin(y * (3.14159/180) )) ;
-               x      =  x * ( cos(y * (3.14159/180) )) ;
-               if (x< SENSITIVITY) x = 0;
-               if (y< SENSITIVITY) y = 0;
-               result->x = x;
-               result->y = y;
+               new_x      =  x * ( cos(y * (3.14159/180) )) ;
+               new_y      =  x * ( sin(y * (3.14159/180) )) ;
+               if (new_x< SENSITIVITY) new_x = 0;
+               if (new_y< SENSITIVITY) new_y = 0;
+               result->x = new_x;
+               result->y = new_y;
      } else if (sscanf(str, "(%f,%f)", &x, &y) == 2) {
                result->x = x;
                result->y = y;
@@ -139,15 +139,6 @@ complex_mult(PG_FUNCTION_ARGS)
         PG_RETURN_POINTER(result);
 }
 
-Datum
-complex_dot(PG_FUNCTION_ARGS)
-{
-        Complex    *a = (Complex *) PG_GETARG_POINTER(0);
-        Complex    *b = (Complex *) PG_GETARG_POINTER(1);
-
-
-        PG_RETURN_FLOAT4( (a->x*b->x) + (a->y*b->y) );
-}
 
 
 
@@ -177,6 +168,31 @@ complex_angle(PG_FUNCTION_ARGS)
     if (a->x<0) result += 180;
 
     PG_RETURN_FLOAT4(result );
+}
+
+Datum
+complex_theta(PG_FUNCTION_ARGS)
+{
+    // Finds the angle between two vectors
+    Complex    *a = (Complex *) PG_GETARG_POINTER(0);
+    Complex    *b = (Complex *) PG_GETARG_POINTER(1);
+    float4     dot_product, cos_theta, angle;
+
+    dot_product  =  (a->x*b->x) + (a->y*b->y)  ;
+    cos_theta    =  dot_product / sqrt( MAG_SQUARED(a))  / sqrt(MAG_SQUARED(b));
+    angle        =  (180/3.14159) * acos( cos_theta) ;
+
+    PG_RETURN_FLOAT4( angle );
+}
+
+Datum
+complex_dot(PG_FUNCTION_ARGS)
+{
+        Complex    *a = (Complex *) PG_GETARG_POINTER(0);
+        Complex    *b = (Complex *) PG_GETARG_POINTER(1);
+
+
+        PG_RETURN_FLOAT4( (a->x*b->x) + (a->y*b->y) );
 }
 
 Datum
