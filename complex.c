@@ -37,21 +37,21 @@ complex_in(PG_FUNCTION_ARGS)
      } else if (sscanf(str, "%f,%f", &x, &y) == 2) {
                result->x = x;
                result->y = y;
-     } else if (sscanf(str, "%f,%fj", &x, &y) == 2) {
+     } else if (sscanf(str, "%f,%f[ij]", &x, &y) == 2) {
                result->x = x;
                result->y = y;
-     } else if ( (sscanf(buf, "%g%[j]%[_]",  &y, &c, &c) == 3) ) {
+     } else if ( (sscanf(buf, "%g%[ji]%[_]",  &y, &c, &c) == 3) ) {
                result->x = 0;
                result->y = y;
      } else if ( (sscanf(buf,"%g%[_]%[_]",  &x,&c,&c) == 2) ) {
                result->x = x;
                result->y = 0;
-     } else if ( (sscanf(buf,"%g%g%[j]%[_]",  &x,&y,&c,&c) == 4) ) {
+     } else if ( (sscanf(buf,"%g%g%[ij]%[_]",  &x,&y,&c,&c) == 4) ) {
                result->x = x;
                result->y = y;
      }else{ 
              ereport(ERROR, (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
-                            errmsg("syntax is like \"8<60>\", \"2,5\",\"(2,5)\",\"2-5j\", \"+5j\", or \"2\"")));
+                            errmsg("syntax is like \"8<60>\", \"2,5\",\"(2,5)\",\"2-5j\", \"+5i\", or \"2\"")));
      }
      PG_RETURN_POINTER(result);
 }
@@ -70,6 +70,8 @@ complex_out(PG_FUNCTION_ARGS)
             angle  =  (180/3.14159)* atan(a->y/a->x);
             result = psprintf("%.3f<%.3f>", mag, (a->x<0) ? angle+180 : angle);
      } else if ( (NULL != output_style) && !(strcmp( output_style, "j")) ) {
+            result = psprintf("%.3f,%.3fj", a->x, a->y);
+     } else if ( (NULL != output_style) && !(strcmp( output_style, "i")) ) {
             result = psprintf("%.3f,%.3fj", a->x, a->y);
      }else{
             result = psprintf("(%.3f,%.3f)", a->x, a->y);

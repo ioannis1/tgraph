@@ -1,13 +1,15 @@
 -- COPYRIGHT (c) Ioannis Tambouras 2011-2013
 
-You may set the GUC variable complex.style='polar' to set output to polar coordinates, or to 'j' to display in cartisian
-coordinates without parenthesis, such as  1,2j .
+You may set the GUC variable complex.style='polar' to set output to polar coordinates, or to 'j' to display in Cartisian
+coordinates without parenthesis, such as  1,2j ; similarly, set it to 'i' to display in Cartisian with 'i' ; 
 
 # constructors
 
 SELECT '1+2j'::complex                         => (1,2)
 
 SELECT '2j'::complex                           => (0,2)
+
+SELECT '2i'::complex                           => (0,2)
 
 SELECT '1'::complex                            => (1,0)
 
