@@ -2,8 +2,14 @@
 SET SEARCH_PATH TO  :path,public;
 SET CLIENT_MIN_MESSAGES = 'ERROR';
 begin;
+SET complex.style='polar';
 
+SELECT wave 
+FROM try
+WHERE  wave> age
+;
 
+\q
 CREATE OPERATOR CLASS cincl_ops
   DEFAULT FOR TYPE complex
   USING brin   AS

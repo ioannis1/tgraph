@@ -1,9 +1,9 @@
 # -- COPYRIGHT (c) Ioannis Tambouras 2011-2015
 
-EXTENSION = complex             # the extensions name
-DATA      = complex--0.1.sql  complex--0.1--0.2.sql   complex--0.2--0.1.sql
-REGRESS   = complex_test        # our test script file (without extension)
-MODULES   = complex             # our c module file to build
+EXTENSION = tgraph        
+DATA      = tgraph--0.1.sql
+REGRESS   = tgraph_test  
+MODULES   = tgraph      
 
 # postgres build stuff
 PG_CONFIG = pg_config
@@ -11,12 +11,16 @@ PGXS := $(shell $(PG_CONFIG) --pgxs)
 include $(PGXS)
 
 vi:
-	 vi ~postgres/src/postgres/src/tutorial/complex.c
+	 vi ~postgres/src/postgres/src/tutorial/tgraph.c
 ins:
 	sudo -u postgres make install
 i drop:
-	psql -qX -h localhost -d contrib_regression -U postgres  < $@.sql
+	psql -qX -h localhost -d lessons -U postgres  < $@.sql
 c:
 	PGUSER=postgres sudo -E  make  installcheck
 pgxs:
 	vi $(PGXS)
+
+
+OBJS = tgraph.o  trgm_gin.o trgm_regexp.o $(WIN32RES)
+PGFILEDESC = "tgraph - trigram matching"

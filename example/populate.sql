@@ -5,7 +5,7 @@ INSERT INTO try
 SELECT --public.random_string(4)
        i
      ,( '('|| i ||','|| i || ')')::complex
-FROM  generate_series(1,100000) a(i);
+FROM  generate_series(1,4) a(i);
 
 ANALYZE try;
 
