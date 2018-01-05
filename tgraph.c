@@ -13,287 +13,380 @@
 #include "utils/memutils.h"
 #include "utils/pg_crc.h"
 
+#include "tgraph_ops.c"
+#include "access/gin.h"
+#include "access/stratnum.h"
+#include "trgm_regexp.c"
 
+PG_FUNCTION_INFO_V1(gin_extract_value_trgm);
+PG_FUNCTION_INFO_V1(gin_extract_query_trgm);
+PG_FUNCTION_INFO_V1(gin_trgm_consistent);
 
-double		similarity_threshold = 0.3f;
-
-static int
-comp_trgm(const void *a, const void *b)
+const char *
+get_wildcard_part(const char *str, int lenstr,
+				  char *buf, int *bytelen, int *charlen)
 {
-        return CMPTRGM(a, b);
+	const char *beginword = str;
+	const char *endword;
+	char	   *s = buf;
+	bool		in_leading_wildcard_meta = false;
+	bool		in_trailing_wildcard_meta = false;
+	bool		in_escape = false;
+	int			clen;
+
+	/*
+	 * Find the first word character, remembering whether preceding character
+	 * was wildcard meta-character.  Note that the in_escape state persists
+	 * from this loop to the next one, since we may exit at a word character
+	 * that is in_escape.
+	 */
+	while (beginword - str < lenstr)
+	{
+		if (in_escape)
+		{
+			if (ISWORDCHR(beginword))
+				break;
+			in_escape = false;
+			in_leading_wildcard_meta = false;
+		}
+		else
+		{
+			if (ISESCAPECHAR(beginword))
+				in_escape = true;
+			else if (ISWILDCARDCHAR(beginword))
+				in_leading_wildcard_meta = true;
+			else if (ISWORDCHR(beginword))
+				break;
+			else
+				in_leading_wildcard_meta = false;
+		}
+		beginword += pg_mblen(beginword);
+	}
+
+	/*
+	 * Handle string end.
+	 */
+	if (beginword - str >= lenstr)
+		return NULL;
+
+	/*
+	 * Add left padding spaces if preceding character wasn't wildcard
+	 * meta-character.
+	 */
+	*charlen = 0;
+	if (!in_leading_wildcard_meta)
+	{
+		if (LPADDING > 0)
+		{
+			*s++ = ' ';
+			(*charlen)++;
+			if (LPADDING > 1)
+			{
+				*s++ = ' ';
+				(*charlen)++;
+			}
+		}
+	}
+
+	/*
+	 * Copy data into buf until wildcard meta-character, non-word character or
+	 * string boundary.  Strip escapes during copy.
+	 */
+	endword = beginword;
+	while (endword - str < lenstr)
+	{
+		clen = pg_mblen(endword);
+		if (in_escape)
+		{
+			if (ISWORDCHR(endword))
+			{
+				memcpy(s, endword, clen);
+				(*charlen)++;
+				s += clen;
+			}
+			else
+			{
+				/*
+				 * Back up endword to the escape character when stopping at an
+				 * escaped char, so that subsequent get_wildcard_part will
+				 * restart from the escape character.  We assume here that
+				 * escape chars are single-byte.
+				 */
+				endword--;
+				break;
+			}
+			in_escape = false;
+		}
+		else
+		{
+			if (ISESCAPECHAR(endword))
+				in_escape = true;
+			else if (ISWILDCARDCHAR(endword))
+			{
+				in_trailing_wildcard_meta = true;
+				break;
+			}
+			else if (ISWORDCHR(endword))
+			{
+				memcpy(s, endword, clen);
+				(*charlen)++;
+				s += clen;
+			}
+			else
+				break;
+		}
+		endword += clen;
+	}
+
+	/*
+	 * Add right padding spaces if next character isn't wildcard
+	 * meta-character.
+	 */
+	if (!in_trailing_wildcard_meta)
+	{
+		if (RPADDING > 0)
+		{
+			*s++ = ' ';
+			(*charlen)++;
+			if (RPADDING > 1)
+			{
+				*s++ = ' ';
+				(*charlen)++;
+			}
+		}
+	}
+
+	*bytelen = s - buf;
+	return endword;
 }
 
-float4
-cnt_sml(TRGM *trg1, TRGM *trg2, bool inexact)
+Datum
+gin_extract_value_trgm(PG_FUNCTION_ARGS)
 {
-        trgm       *ptr1,
-                           *ptr2;
-        int                     count = 0;
-        int                     len1,
-                                len2;
-
-        ptr1 = GETARR(trg1);
-        ptr2 = GETARR(trg2);
-
-        len1 = ARRNELEM(trg1);
-        len2 = ARRNELEM(trg2);
-
-        /* explicit test is needed to avoid 0/0 division when both lengths are 0 */
-        if (len1 <= 0 || len2 <= 0)
-                return (float4) 0.0;
-
-        while (ptr1 - GETARR(trg1) < len1 && ptr2 - GETARR(trg2) < len2)
-        {
-                int                     res = CMPTRGM(ptr1, ptr2);
-
-                if (res < 0)
-                        ptr1++;
-                else if (res > 0)
-                        ptr2++;
-                else
-                {
-                        ptr1++;
-                        ptr2++;
-                       count++;
-                }
-        }
-
-        /*
-         * If inexact then len2 is equal to count, because we don't know actual
-         * length of second string in inexact search and we can assume that count
-         * is a lower bound of len2.
-         */
-        return CALCSML(count, len1, inexact ? count : len2);
-}
-
-
-
-static int
-unique_array(trgm *a, int len)
-{
-        trgm       *curend,
-                           *tmp;
-
-        curend = tmp = a;
-        while (tmp - a < len)
-                if (CMPTRGM(tmp, curend))
-                {
-                        curend++;
-                        CPTRGM(curend, tmp);
-                        tmp++;
-                }
-                else
-                        tmp++;
-
-        return curend + 1 - a;
-}
-
-void
-compact_trigram(trgm *tptr, char *str, int bytelen)
-{
-        if (bytelen == 3)
-        {
-                CPTRGM(tptr, str);
-        }
-        else
-        {
-                pg_crc32        crc;
-
-                INIT_LEGACY_CRC32(crc);
-                COMP_LEGACY_CRC32(crc, str, bytelen);
-                FIN_LEGACY_CRC32(crc);
-
-                /*
-                 * use only 3 upper bytes from crc, hope, it's good enough hashing
-                 */
-                CPTRGM(tptr, &crc);
-        }
-}
-
-static trgm *
-make_trigrams(trgm *tptr, char *str, int bytelen, int charlen)
-{
-        char       *ptr = str;
-
-        if (charlen < 3)
-                return tptr;
-
-        if (bytelen > charlen)
-        {
-                /* Find multibyte character boundaries and apply compact_trigram */
-                int                     lenfirst = pg_mblen(str),
-                                        lenmiddle = pg_mblen(str + lenfirst),
-                                        lenlast = pg_mblen(str + lenfirst + lenmiddle);
-
-                while ((ptr - str) + lenfirst + lenmiddle + lenlast <= bytelen)
-                {
-                        compact_trigram(tptr, ptr, lenfirst + lenmiddle + lenlast);
-
-                        ptr += lenfirst;
-                        tptr++;
-
-                        lenfirst = lenmiddle;
-                        lenmiddle = lenlast;
-                        lenlast = pg_mblen(ptr + lenfirst + lenmiddle);
-                }
-        } else {
-                /* Fast path when there are no multibyte characters */
-                Assert(bytelen == charlen);
-
-                while (ptr - str < bytelen - 2 /* number of trigrams = strlen - 2 */ )
-                {
-                        CPTRGM(tptr, ptr);
-                        ptr++;
-                        tptr++;
-                }
-        }
-
-        return tptr;
-}
-
-static char *
-find_word(char *str, int lenstr, char **endword, int *charlen)
-{
-        char       *beginword = str;
-
-        while (beginword - str < lenstr && !ISWORDCHR(beginword))
-                beginword += pg_mblen(beginword);
-
-        if (beginword - str >= lenstr)
-                return NULL;
-
-        *endword = beginword;
-        *charlen = 0;
-        while (*endword - str < lenstr && ISWORDCHR(*endword))
-        {
-                *endword += pg_mblen(*endword);
-                (*charlen)++;
-        }
-
-        return beginword;
-}
-
-
-static int
-generate_trgm_only(trgm *trg, char *str, int slen)
-{
-        trgm       *tptr;
-        char       *buf;
-        int                     charlen,
-                                bytelen;
-        char       *bword,
-                           *eword;
-
-        if (slen + LPADDING + RPADDING < 3 || slen == 0)
-                return 0;
-
-        tptr = trg;
-
-        /* Allocate a buffer for case-folded, blank-padded words */
-        buf = (char *) palloc(slen * pg_database_encoding_max_length() + 4);
-
-        if (LPADDING > 0)
-        {
-                *buf = ' ';
-                if (LPADDING > 1)
-                        *(buf + 1) = ' ';
-        }
-
-        eword = str;
-        while ((bword = find_word(eword, slen - (eword - str), &eword, &charlen)) != NULL)
-        {
-#ifdef IGNORECASE
-                bword = lowerstr_with_len(bword, eword - bword);
-                bytelen = strlen(bword);
-#else
-                bytelen = eword - bword;
-#endif
-
-                memcpy(buf + LPADDING, bword, bytelen);
-
-#ifdef IGNORECASE
-                pfree(bword);
-#endif
-
-                buf[LPADDING + bytelen] = ' ';
-                buf[LPADDING + bytelen + 1] = ' ';
-
-                /*
-                 * count trigrams
-                 */
-                tptr = make_trigrams(tptr, buf, bytelen + LPADDING + RPADDING,
-                                                         charlen + LPADDING + RPADDING);
-        }
-
-        pfree(buf);
-
-        return tptr - trg;
-}
-
-
-static void
-protect_out_of_mem(int slen)
-{
-        if ((Size) (slen / 2) >= (MaxAllocSize / (sizeof(trgm) * 3)) ||
-                (Size) slen >= (MaxAllocSize / pg_database_encoding_max_length()))
-                ereport(ERROR,
-                                (errcode(ERRCODE_PROGRAM_LIMIT_EXCEEDED),
-                                 errmsg("out of memory")));
-}
-
-TRGM *
-generate_trgm(char *str, int slen)
-{
+        text       *val = (text *) PG_GETARG_TEXT_PP(0);
+        int32      *nentries = (int32 *) PG_GETARG_POINTER(1);
+        Datum      *entries = NULL;
         TRGM       *trg;
-        int         len;
+        int32           trglen;
 
-        protect_out_of_mem(slen);
+        *nentries = 0;
 
-        trg = (TRGM *) palloc(TRGMHDRSIZE + sizeof(trgm) * (slen / 2 + 1) * 3);
-        trg->flag = ARRKEY;
+        trg = generate_trgm(VARDATA_ANY(val), VARSIZE_ANY_EXHDR(val));
+        trglen = ARRNELEM(trg);
 
-        len = generate_trgm_only(GETARR(trg), str, slen);
-        SET_VARSIZE(trg, CALCGTSIZE(ARRKEY, len));
+        if (trglen > 0)
+        {
+                trgm       *ptr;
+                int32           i;
 
-        if (len == 0) return trg;
-        if (len > 1) {
-                qsort((void *) GETARR(trg), len, sizeof(trgm), comp_trgm);
-                len = unique_array(GETARR(trg), len);
+                *nentries = trglen;
+                entries = (Datum *) palloc(sizeof(Datum) * trglen);
+
+                ptr = GETARR(trg);
+                for (i = 0; i < trglen; i++)
+                {
+                        int32           item = trgm2int(ptr);
+
+                        entries[i] = Int32GetDatum(item);
+                        ptr++;
+                }
         }
-        SET_VARSIZE(trg, CALCGTSIZE(ARRKEY, len));
-        return trg;
+
+        PG_RETURN_POINTER(entries);
 }
 
-Datum
-similarity(PG_FUNCTION_ARGS)
-{
-        text       *in1 = PG_GETARG_TEXT_PP(0);
-        text       *in2 = PG_GETARG_TEXT_PP(1);
-        TRGM       *trg1,
-                           *trg2;
-        float4          res;
 
-        trg1 = generate_trgm(VARDATA_ANY(in1), VARSIZE_ANY_EXHDR(in1));
-        trg2 = generate_trgm(VARDATA_ANY(in2), VARSIZE_ANY_EXHDR(in2));
-
-        res = cnt_sml(trg1, trg2, false);
-
-        pfree(trg1);
-        pfree(trg2);
-        PG_FREE_IF_COPY(in1, 0);
-        PG_FREE_IF_COPY(in2, 1);
-
-        PG_RETURN_FLOAT4(res);
-}
 
 
 Datum
-similarity_op(PG_FUNCTION_ARGS)
+gin_extract_query_trgm(PG_FUNCTION_ARGS)
 {
-        float4    res = DatumGetFloat4(DirectFunctionCall2(similarity,
-                                          PG_GETARG_DATUM(0),
-                                          PG_GETARG_DATUM(1)));
+        text       *val = (text *) PG_GETARG_TEXT_PP(0);
+        int32      *nentries = (int32 *) PG_GETARG_POINTER(1);
+        StrategyNumber strategy = PG_GETARG_UINT16(2);
 
-        PG_RETURN_BOOL(res >= similarity_threshold);
+        /* bool   **pmatch = (bool **) PG_GETARG_POINTER(3); */
+        Pointer   **extra_data = (Pointer **) PG_GETARG_POINTER(4);
+
+        /* bool   **nullFlags = (bool **) PG_GETARG_POINTER(5); */
+        int32      *searchMode = (int32 *) PG_GETARG_POINTER(6);
+        Datum      *entries = NULL;
+        TRGM       *trg;
+        int32           trglen;
+        trgm       *ptr;
+        TrgmPackedGraph *graph;
+        int32           i;
+
+        switch (strategy)
+        {
+                case SimilarityStrategyNumber:
+                case WordSimilarityStrategyNumber:
+                        trg = generate_trgm(VARDATA_ANY(val), VARSIZE_ANY_EXHDR(val));
+                        break;
+                case ILikeStrategyNumber:
+#ifndef IGNORECASE
+                        elog(ERROR, "cannot handle ~~* with case-sensitive trigrams");
+#endif
+                        /* FALL THRU */
+                case LikeStrategyNumber:
+                        /*
+                         * For wildcard search we extract all the trigrams that every
+                         * potentially-matching string must include.
+                         */
+                        trg = generate_wildcard_trgm(VARDATA_ANY(val),
+                                                                                 VARSIZE_ANY_EXHDR(val));
+                        break;
+                case RegExpICaseStrategyNumber:
+#ifndef IGNORECASE
+                        elog(ERROR, "cannot handle ~* with case-sensitive trigrams");
+#endif
+                        /* FALL THRU */
+                case RegExpStrategyNumber:
+                        trg = createTrgmNFA(val, PG_GET_COLLATION(),
+                                                                &graph, CurrentMemoryContext);
+                        if (trg && ARRNELEM(trg) > 0)
+                        {
+                                /*
+                                 * Successful regex processing: store NFA-like graph as
+                                 * extra_data.  GIN API requires an array of nentries
+                                 * Pointers, but we just put the same value in each element.
+                                 */
+                                trglen = ARRNELEM(trg);
+                                *extra_data = (Pointer *) palloc(sizeof(Pointer) * trglen);
+                                for (i = 0; i < trglen; i++)
+                                        (*extra_data)[i] = (Pointer) graph;
+                        }
+                        else
+                        {
+                                /* No result: have to do full index scan. */
+                                *nentries = 0;
+                                *searchMode = GIN_SEARCH_MODE_ALL;
+                                PG_RETURN_POINTER(entries);
+                        }
+                        break;
+                default:
+                        elog(ERROR, "unrecognized strategy number: %d", strategy);
+                        trg = NULL;                     /* keep compiler quiet */
+                        break;
+        }
+
+        trglen = ARRNELEM(trg);
+        *nentries = trglen;
+
+        if (trglen > 0)
+        {
+                entries = (Datum *) palloc(sizeof(Datum) * trglen);
+                ptr = GETARR(trg);
+                for (i = 0; i < trglen; i++)
+                {
+                        int32           item = trgm2int(ptr);
+
+                        entries[i] = Int32GetDatum(item);
+                        ptr++;
+                }
+        }
+       /*
+         * If no trigram was extracted then we have to scan all the index.
+         */
+        if (trglen == 0)
+                *searchMode = GIN_SEARCH_MODE_ALL;
+
+        PG_RETURN_POINTER(entries);
 }
+
+Datum
+gin_trgm_consistent(PG_FUNCTION_ARGS)
+{
+        bool       *check = (bool *) PG_GETARG_POINTER(0);
+        StrategyNumber strategy = PG_GETARG_UINT16(1);
+
+
+        /* text    *query = PG_GETARG_TEXT_PP(2); */
+        int32           nkeys = PG_GETARG_INT32(3);
+        Pointer    *extra_data = (Pointer *) PG_GETARG_POINTER(4);
+        bool       *recheck = (bool *) PG_GETARG_POINTER(5);
+        bool            res;
+        int32           i,
+                                ntrue;
+        double          nlimit;
+
+        /* All cases served by this function are inexact */
+        *recheck = true;
+
+        switch (strategy)
+        {
+                case SimilarityStrategyNumber:
+                case WordSimilarityStrategyNumber:
+                        nlimit = (strategy == SimilarityStrategyNumber) ?
+                                similarity_threshold : word_similarity_threshold;
+
+                        /* Count the matches */
+                        ntrue = 0;
+                        for (i = 0; i < nkeys; i++)
+                        {
+                                if (check[i])
+                                        ntrue++;
+                        }
+
+
+                        /*--------------------
+                         * If DIVUNION is defined then similarity formula is:
+                         * c / (len1 + len2 - c)
+                         * where c is number of common trigrams and it stands as ntrue in
+                         * this code.  Here we don't know value of len2 but we can assume
+                         * that c (ntrue) is a lower bound of len2, so upper bound of
+                         * similarity is:
+                         * c / (len1 + c - c)  => c / len1
+                         * If DIVUNION is not defined then similarity formula is:
+                         * c / max(len1, len2)
+                         * And again, c (ntrue) is a lower bound of len2, but c <= len1
+                         * just by definition and, consequently, upper bound of
+                         * similarity is just c / len1.
+                         * So, independently on DIVUNION the upper bound formula is the same.
+                         */
+                        res = (nkeys == 0) ? false :
+                                (((((float4) ntrue) / ((float4) nkeys))) >= nlimit);
+                        break;
+                case ILikeStrategyNumber:
+#ifndef IGNORECASE
+                        elog(ERROR, "cannot handle ~~* with case-sensitive trigrams");
+#endif
+                        /* FALL THRU */
+                case LikeStrategyNumber:
+                        /* Check if all extracted trigrams are presented. */
+                        res = true;
+                        for (i = 0; i < nkeys; i++)
+                        {
+                                if (!check[i])
+                                {
+                                        res = false;
+                                        res = false;
+                                        break;
+                                }
+                        }
+                        break;
+                case RegExpICaseStrategyNumber:
+#ifndef IGNORECASE
+                        elog(ERROR, "cannot handle ~* with case-sensitive trigrams");
+#endif
+                        /* FALL THRU */
+                case RegExpStrategyNumber:
+                        if (nkeys < 1)
+                        {
+                                /* Regex processing gave no result: do full index scan */
+                                res = true;
+                        }
+                        else
+                                res = trigramsMatchGraph((TrgmPackedGraph *) extra_data[0],
+                                                                                 check);
+                        break;
+                default:
+                        elog(ERROR, "unrecognized strategy number: %d", strategy);
+                        res = false;            /* keep compiler quiet */
+                        break;
+        }
+
+        PG_RETURN_BOOL(res);
+}
+
 

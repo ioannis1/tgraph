@@ -1,9 +1,11 @@
 # -- COPYRIGHT (c) Ioannis Tambouras 2011-2015
 
-EXTENSION = tgraph        
-DATA      = tgraph--0.1.sql
-REGRESS   = tgraph_test  
-MODULES   = tgraph      
+EXTENSION  = tgraph        
+DATA       = tgraph--0.1.sql
+REGRESS    = tgraph_test  
+MODULES    = tgraph      
+OBJS       = tgraph.o tgraph_ops.o  trgm_gin.o trgm_regexp.o 
+PGFILEDESC = "tgraph - trigram matching"
 
 # postgres build stuff
 PG_CONFIG = pg_config
@@ -22,5 +24,3 @@ pgxs:
 	vi $(PGXS)
 
 
-OBJS = tgraph.o  trgm_gin.o trgm_regexp.o $(WIN32RES)
-PGFILEDESC = "tgraph - trigram matching"

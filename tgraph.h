@@ -15,6 +15,18 @@
 PG_MODULE_MAGIC;
 
 
+#ifdef KEEPONLYALNUM
+#define ISWORDCHR(c)    (t_isalpha(c) || t_isdigit(c))
+#define ISPRINTABLECHAR(a)      ( isascii( *(unsigned char*)(a) ) && (isalnum( *(unsigned char*)(a) ) || *(unsigned char*)(a)==' ') )
+#else
+#define ISWORDCHR(c)    (!t_isspace(c))
+#define ISPRINTABLECHAR(a)      ( isascii( *(unsigned char*)(a) ) && isprint( *(unsigned char*)(a) ) )
+#endif
+#define ISPRINTABLETRGM(t)      ( ISPRINTABLECHAR( ((char*)(t)) ) && ISPRINTABLECHAR( ((char*)(t))+1 ) && ISPRINTABLECHAR( ((char*)(t))+2 ) )
+
+#define ISESCAPECHAR(x) (*(x) == '\\')  /* Wildcard escape character */
+#define ISWILDCARDCHAR(x) (*(x) == '_' || *(x) == '%') 
+
 typedef struct
 {
         int32           vl_len_;                /* varlena header (do not touch directly!) */
@@ -23,6 +35,39 @@ typedef struct
 } TRGM;
 
 typedef char trgm[3];
+typedef struct TrgmPackedGraph TrgmPackedGraph;
+
+
+extern double word_similarity_threshold;
+
+
+const char * get_wildcard_part(const char *str, int lenstr, char *buf, int *bytelen, int *charlen);
+extern uint32 trgm2int(trgm *ptr);
+extern void compact_trigram(trgm *tptr, char *str, int bytelen);
+extern TRGM *generate_trgm(char *str, int slen);
+extern TRGM *generate_wildcard_trgm(const char *str, int slen);
+extern float4 cnt_sml(TRGM *trg1, TRGM *trg2, bool inexact);
+extern bool trgm_contained_by(TRGM *trg1, TRGM *trg2);
+extern bool *trgm_presence_map(TRGM *query, TRGM *key);
+extern TRGM *createTrgmNFA(text *text_re, Oid collation,
+                          TrgmPackedGraph **graph, MemoryContext rcontext);
+extern bool trigramsMatchGraph(TrgmPackedGraph *graph, bool *check);
+
+
+#define ISESCAPECHAR(x) (*(x) == '\\')
+#define ILikeStrategyNumber				4
+#define SimilarityStrategyNumber		1
+#define SimilarityStrategyNumber                1
+#define DistanceStrategyNumber                  2
+#define LikeStrategyNumber                              3
+#define ILikeStrategyNumber                             4
+#define RegExpStrategyNumber                    5
+#define RegExpICaseStrategyNumber               6
+#define WordSimilarityStrategyNumber    7
+#define WordDistanceStrategyNumber              8
+
+
+#define WordSimilarityStrategyNumber	7
 
 
 #define CMPCHAR(a,b) ( ((a)==(b)) ? 0 : ( ((a)<(b)) ? -1 : 1 ) )
@@ -61,8 +106,6 @@ extern float4 cnt_sml(TRGM *trg1, TRGM *trg2, bool inexact);
         *(((char*)(a))+2) = *(((char*)(b))+2);  \
 } while(0);
 #ifdef KEEPONLYALNUM
-#define ISWORDCHR(c)    (t_isalpha(c) || t_isdigit(c))
-#define ISPRINTABLECHAR(a)      ( isascii( *(unsigned char*)(a) ) && (isalnum( *(unsigned char*)(a) ) || *(unsigned char*)(a)==' ') )
 #else
 #define ISWORDCHR(c)    (!t_isspace(c))
 #define ISPRINTABLECHAR(a)      ( isascii( *(unsigned char*)(a) ) && isprint( *(unsigned char*)(a) ) )
@@ -76,7 +119,7 @@ extern float4 cnt_sml(TRGM *trg1, TRGM *trg2, bool inexact);
 #define CMPTRGM(a,b) ( CMPPCHAR(a,b,0) ? CMPPCHAR(a,b,0) : ( CMPPCHAR(a,b,1) ? CMPPCHAR(a,b,1) : CMPPCHAR(a,b,2) ) )
 
 
-
+double		word_similarity_threshold = 0.6f;
 
 
 
